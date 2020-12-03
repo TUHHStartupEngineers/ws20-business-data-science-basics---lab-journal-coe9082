@@ -48,39 +48,41 @@ So, let's say you are learning how to make a histogram in R. For example, maybe 
 
 ```{r}
 # Data Science at TUHH ------------------------------------------------------
+
+# Chapter 2 ----
 # SALES ANALYSIS ----
 
-# 1.0 Load libraries ----
+# 2.1 Load libraries ----
   library(tidyverse)
   library(lubridate)
   library(readxl)
 
-# 2.0 Importing Files ----
+# 2.2 Importing Files ----
   bikes_tbl      <- read_excel("data-science/00_data/01_bike_sales/01_raw_data/bikes.xlsx")
   orderlines_tbl <- read_excel("data-science/00_data/01_bike_sales/01_raw_data/orderlines.xlsx")
   bikeshops_tbl  <- read_excel("data-science/00_data/01_bike_sales/01_raw_data/bikeshops.xlsx")
 
-# 3.0 Joining Data ----
+# 2.3 Joining Data ----
   bike_orderlines_joined_tbl <- orderlines_tbl %>%
   left_join(bikes_tbl, by = c("product.id" = "bike.id")) %>%
   left_join(bikeshops_tbl, by = c("customer.id" = "bikeshop.id"))
 
-# 4.0 Wrangling Data ----
+# 2.4 Wrangling Data ----
   bike_orderlines_wrangled_tbl <- bike_orderlines_joined_tbl %>%
-    # 4.1 Split location into state and city
+    # 2.4.1 Split location into state and city
     separate(col    = location,
             into   = c("city", "state"),
             sep    = ", ") %>%
 
-    # 4.2 Add the total price (price * quantity) 
+    # 2.4.2 Add the total price (price * quantity) 
     mutate(total.price = price * quantity) %>%
   
-    # 4.3 Rename columns in underscores instead of dots
+    # 2.4.3 Rename columns in underscores instead of dots
     set_names(names(.) %>% str_replace_all("\\.", "_"))
 
-# 5.0 Business Insights ----
+# 2.5 Business Insights ----
   
-  # 5.1 Sales by State
+  # 2.5.1 Sales by State
   # Step 1 - Manipulate
   sales_by_location_tbl <- bike_orderlines_wrangled_tbl %>%
   
@@ -126,7 +128,7 @@ So, let's say you are learning how to make a histogram in R. For example, maybe 
     #rotate x-axis labels
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  # 5.2 Sales by Year and Location
+  # 2.5.2 Sales by Year and Location
 
   # Step 1 - Manipulate
   sales_by_year_location_tbl <- bike_orderlines_wrangled_tbl %>%
@@ -171,6 +173,135 @@ So, let's say you are learning how to make a histogram in R. For example, maybe 
 
     #rotate x-axis labels
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  # Chapter 3 ----
+
+# 3.1 API data retrieval ----
+
+# 3.1.0 Load libraries
+
+library(httr)
+library(glue)
+library(jsonlite)
+library(keyring)
+
+# 3.1.1 Code
+#Returns information for the top 50 cities worldwide.
+
+#keyring::key_set("token")
+
+api_key = key_get("token")
+
+url <- modify_url(url = "http://dataservice.accuweather.com", path = glue("/locations/v1/topcities/50?apikey={api_key}&language=en-us&details=false"))
+
+raw_data <- GET(url)
+
+stop_for_status(raw_data) # automatically throws an error if a request did not succeed
+
+data_list <- raw_data %>% 
+  .$content %>% 
+  rawToChar() %>% 
+  fromJSON()
+
+glimpse(data_list)
+
+# 3.2 WEBSCRAPING ----
+
+# 3.2.0 Load libraries
+
+library(tidyverse) # Main Package - Loads dplyr, purrr, etc.
+library(rvest)     # HTML Hacking & Web Scraping
+library(xopen)     # Quickly opening URLs
+library(jsonlite)  # converts JSON files to R objects
+library(glue)      # concatenate strings
+library(stringi)   # character string/text processing
+
+# 3.2.1 COLLECT PRODUCT FAMILIES
+
+url_home          <- "https://www.rosebikes.de/"
+
+# Read in the HTML for the entire home webpage
+html_home         <- read_html(url_home)
+
+# Web scrape the urls for the families
+bike_family_tbl <- html_home %>%
+  
+  # Get the nodes for the families ...
+  html_nodes(css = ".main-navigation-category-with-tiles__link ") %>%
+  
+  # ...and extract the href information
+  html_attr('href') %>%
+  
+  # Remove the product families sale 
+  discard(.p = ~stringr::str_detect(.x,"sale$")) %>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "family_class") %>%
+  
+  # Save the family urls
+  transmute(family_url = str_glue("https://www.rosebikes.de{family_class}"))
+
+
+# 3.2.2 COLLECT Gravel Categories 
+
+# Read in the HTML for the entire Gravel family webpage
+html_family         <- read_html(bike_family_tbl$family_url[3])
+
+
+bike_category_tbl <- html_family %>%
+  
+  #Get the nodes for categories
+  html_nodes(css = ".catalog-category-bikes__picture-wrapper") %>%
+  
+  # ...and extract the href information
+  html_attr('href') %>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "subdirectory") %>%
+  
+  # Save the Categories urls
+  transmute(position, category_url = str_glue("https://www.rosebikes.de{subdirectory}"))
+
+
+# 3.2.3 COLLECT Gravel/Backroad Bike Models 
+
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         <- read_html(bike_category_tbl$category_url[2])
+
+bike_model_tbl <- html_models %>%
+  
+  #Get the nodes for bike models
+  html_nodes(css = ".catalog-category-model__title") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "model")
+
+
+#Read models prices
+model_price_tbl <- html_models %>%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = ".catalog-category-model__price-current-value") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "price")
+
+#Joining category, model and price
+bike_model_tbl <- left_join(bike_model_tbl, model_price_tbl, by = c("position")) %>%
+  tibble(category= bike_category_tbl$category_url[2]) %>% 
+  separate(col    = category,
+           into   = c("remove", "category"),
+           sep    = "fahrräder/") %>% 
+  select(position, category, model, price)
+
+#Print first 10 rows
+bike_model_tbl
 ```
 
 When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You'll learn that all of these things and more can be customized in each R code block.

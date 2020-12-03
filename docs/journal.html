@@ -426,7 +426,7 @@ div.tocify {
 <p>This is an <code>.Rmd</code> file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header.</p>
 <div id="my-first-post" class="section level1">
 <h1><span class="header-section-number">1</span> My first post</h1>
-<p>Last compiled: 2020-12-01</p>
+<p>Last compiled: 2020-12-03</p>
 <p>Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left.</p>
 <div id="second-level-header" class="section level2">
 <h2><span class="header-section-number">1.1</span> Second level header</h2>
@@ -439,7 +439,7 @@ div.tocify {
 </div>
 <div id="my-second-post-note-the-order" class="section level1">
 <h1><span class="header-section-number">2</span> My second post (note the order)</h1>
-<p>Last compiled: 2020-12-01</p>
+<p>Last compiled: 2020-12-03</p>
 <p>I’m writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom</p>
 </div>
 <div id="adding-r-stuff" class="section level1">
@@ -447,39 +447,41 @@ div.tocify {
 <p>So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place.</p>
 <p>So, let’s say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:</p>
 <pre class="r"><code># Data Science at TUHH ------------------------------------------------------
+
+# Chapter 2 ----
 # SALES ANALYSIS ----
 
-# 1.0 Load libraries ----
+# 2.1 Load libraries ----
   library(tidyverse)
   library(lubridate)
   library(readxl)
 
-# 2.0 Importing Files ----
+# 2.2 Importing Files ----
   bikes_tbl      &lt;- read_excel(&quot;data-science/00_data/01_bike_sales/01_raw_data/bikes.xlsx&quot;)
   orderlines_tbl &lt;- read_excel(&quot;data-science/00_data/01_bike_sales/01_raw_data/orderlines.xlsx&quot;)
   bikeshops_tbl  &lt;- read_excel(&quot;data-science/00_data/01_bike_sales/01_raw_data/bikeshops.xlsx&quot;)
 
-# 3.0 Joining Data ----
+# 2.3 Joining Data ----
   bike_orderlines_joined_tbl &lt;- orderlines_tbl %&gt;%
   left_join(bikes_tbl, by = c(&quot;product.id&quot; = &quot;bike.id&quot;)) %&gt;%
   left_join(bikeshops_tbl, by = c(&quot;customer.id&quot; = &quot;bikeshop.id&quot;))
 
-# 4.0 Wrangling Data ----
+# 2.4 Wrangling Data ----
   bike_orderlines_wrangled_tbl &lt;- bike_orderlines_joined_tbl %&gt;%
-    # 4.1 Split location into state and city
+    # 2.4.1 Split location into state and city
     separate(col    = location,
             into   = c(&quot;city&quot;, &quot;state&quot;),
             sep    = &quot;, &quot;) %&gt;%
 
-    # 4.2 Add the total price (price * quantity) 
+    # 2.4.2 Add the total price (price * quantity) 
     mutate(total.price = price * quantity) %&gt;%
   
-    # 4.3 Rename columns in underscores instead of dots
+    # 2.4.3 Rename columns in underscores instead of dots
     set_names(names(.) %&gt;% str_replace_all(&quot;\\.&quot;, &quot;_&quot;))
 
-# 5.0 Business Insights ----
+# 2.5 Business Insights ----
   
-  # 5.1 Sales by State
+  # 2.5.1 Sales by State
   # Step 1 - Manipulate
   sales_by_location_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;%
   
@@ -525,7 +527,7 @@ div.tocify {
     #rotate x-axis labels
     theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="journal_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<pre class="r"><code>  # 5.2 Sales by Year and Location
+<pre class="r"><code>  # 2.5.2 Sales by Year and Location
 
   # Step 1 - Manipulate
   sales_by_year_location_tbl &lt;- bike_orderlines_wrangled_tbl %&gt;%
@@ -571,6 +573,162 @@ div.tocify {
     #rotate x-axis labels
     theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="journal_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
+<pre class="r"><code>  # Chapter 3 ----
+
+# 3.1 API data retrieval ----
+
+# 3.1.0 Load libraries
+
+library(httr)
+library(glue)
+library(jsonlite)
+library(keyring)
+
+# 3.1.1 Code
+#Returns information for the top 50 cities worldwide.
+
+#keyring::key_set(&quot;token&quot;)
+
+api_key = key_get(&quot;token&quot;)
+
+url &lt;- modify_url(url = &quot;http://dataservice.accuweather.com&quot;, path = glue(&quot;/locations/v1/topcities/50?apikey={api_key}&amp;language=en-us&amp;details=false&quot;))
+
+raw_data &lt;- GET(url)
+
+stop_for_status(raw_data) # automatically throws an error if a request did not succeed
+
+data_list &lt;- raw_data %&gt;% 
+  .$content %&gt;% 
+  rawToChar() %&gt;% 
+  fromJSON()
+
+glimpse(data_list)</code></pre>
+<pre><code>## Rows: 50
+## Columns: 15
+## $ Version                &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+## $ Key                    &lt;chr&gt; &quot;28143&quot;, &quot;113487&quot;, &quot;60449&quot;, &quot;101924&quot;, &quot;10748...
+## $ Type                   &lt;chr&gt; &quot;City&quot;, &quot;City&quot;, &quot;City&quot;, &quot;City&quot;, &quot;City&quot;, &quot;Cit...
+## $ Rank                   &lt;int&gt; 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, ...
+## $ LocalizedName          &lt;chr&gt; &quot;Dhaka&quot;, &quot;Kinshasa&quot;, &quot;Santiago&quot;, &quot;Beijing&quot;, ...
+## $ EnglishName            &lt;chr&gt; &quot;Dhaka&quot;, &quot;Kinshasa&quot;, &quot;Santiago&quot;, &quot;Beijing&quot;, ...
+## $ PrimaryPostalCode      &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;10178&quot;, &quot;&quot;, &quot;&quot;, &quot;EC4A 2...
+## $ Region                 &lt;df[,3]&gt; &lt;data.frame[26 x 3]&gt;
+## $ Country                &lt;df[,3]&gt; &lt;data.frame[26 x 3]&gt;
+## $ AdministrativeArea     &lt;df[,7]&gt; &lt;data.frame[26 x 7]&gt;
+## $ TimeZone               &lt;df[,5]&gt; &lt;data.frame[26 x 5]&gt;
+## $ GeoPosition            &lt;df[,3]&gt; &lt;data.frame[26 x 3]&gt;
+## $ IsAlias                &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FA...
+## $ SupplementalAdminAreas &lt;list&gt; [&lt;data.frame[0 x 0]&gt;, &lt;data.frame[0 x 0]&gt;, ...
+## $ DataSets               &lt;list&gt; [&lt;&quot;AirQualityCurrentConditions&quot;, &quot;AirQualit...</code></pre>
+<pre class="r"><code># 3.2 WEBSCRAPING ----
+
+# 3.2.0 Load libraries
+
+library(tidyverse) # Main Package - Loads dplyr, purrr, etc.
+library(rvest)     # HTML Hacking &amp; Web Scraping
+library(xopen)     # Quickly opening URLs
+library(jsonlite)  # converts JSON files to R objects
+library(glue)      # concatenate strings
+library(stringi)   # character string/text processing
+
+# 3.2.1 COLLECT PRODUCT FAMILIES
+
+url_home          &lt;- &quot;https://www.rosebikes.de/&quot;
+
+# Read in the HTML for the entire home webpage
+html_home         &lt;- read_html(url_home)
+
+# Web scrape the urls for the families
+bike_family_tbl &lt;- html_home %&gt;%
+  
+  # Get the nodes for the families ...
+  html_nodes(css = &quot;.main-navigation-category-with-tiles__link &quot;) %&gt;%
+  
+  # ...and extract the href information
+  html_attr(&#39;href&#39;) %&gt;%
+  
+  # Remove the product families sale 
+  discard(.p = ~stringr::str_detect(.x,&quot;sale$&quot;)) %&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;family_class&quot;) %&gt;%
+  
+  # Save the family urls
+  transmute(family_url = str_glue(&quot;https://www.rosebikes.de{family_class}&quot;))
+
+
+# 3.2.2 COLLECT Gravel Categories 
+
+# Read in the HTML for the entire Gravel family webpage
+html_family         &lt;- read_html(bike_family_tbl$family_url[3])
+
+
+bike_category_tbl &lt;- html_family %&gt;%
+  
+  #Get the nodes for categories
+  html_nodes(css = &quot;.catalog-category-bikes__picture-wrapper&quot;) %&gt;%
+  
+  # ...and extract the href information
+  html_attr(&#39;href&#39;) %&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;subdirectory&quot;) %&gt;%
+  
+  # Save the Categories urls
+  transmute(position, category_url = str_glue(&quot;https://www.rosebikes.de{subdirectory}&quot;))
+
+
+# 3.2.3 COLLECT Gravel/Backroad Bike Models 
+
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         &lt;- read_html(bike_category_tbl$category_url[2])
+
+bike_model_tbl &lt;- html_models %&gt;%
+  
+  #Get the nodes for bike models
+  html_nodes(css = &quot;.catalog-category-model__title&quot;) %&gt;%
+  
+  #...and extract the text
+  html_text()%&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;model&quot;)
+
+
+#Read models prices
+model_price_tbl &lt;- html_models %&gt;%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = &quot;.catalog-category-model__price-current-value&quot;) %&gt;%
+  
+  #...and extract the text
+  html_text()%&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;price&quot;)
+
+#Joining category, model and price
+bike_model_tbl &lt;- left_join(bike_model_tbl, model_price_tbl, by = c(&quot;position&quot;)) %&gt;%
+  tibble(category= bike_category_tbl$category_url[2]) %&gt;% 
+  separate(col    = category,
+           into   = c(&quot;remove&quot;, &quot;category&quot;),
+           sep    = &quot;fahrräder/&quot;) %&gt;% 
+  select(position, category, model, price)
+
+#Print first 10 rows
+bike_model_tbl</code></pre>
+<pre><code>## # A tibble: 9 x 4
+##   position category        model                              price           
+##      &lt;int&gt; &lt;chr&gt;           &lt;chr&gt;                              &lt;chr&gt;           
+## 1        1 gravel/backroad &quot;\nBACKROAD GRX RX600 1x11\n&quot;      &quot;\n2.599,00 €\n&quot;
+## 2        2 gravel/backroad &quot;\nBACKROAD GRX RX600\n&quot;           &quot;\n2.699,00 €\n&quot;
+## 3        3 gravel/backroad &quot;\nBACKROAD GRX RX810 1x11\n&quot;      &quot;\n2.899,00 €\n&quot;
+## 4        4 gravel/backroad &quot;\nBACKROAD GRX RX810\n&quot;           &quot;\n2.999,00 €\n&quot;
+## 5        5 gravel/backroad &quot;\nBACKROAD Force 1x11\n&quot;          &quot;\n2.999,00 €\n&quot;
+## 6        6 gravel/backroad &quot;\nBACKROAD GRX RX810 Di2 1x11\n&quot;  &quot;\n3.499,00 €\n&quot;
+## 7        7 gravel/backroad &quot;\nBACKROAD GRX RX810 Di2\n&quot;       &quot;\n3.599,00 €\n&quot;
+## 8        8 gravel/backroad &quot;\nBACKROAD Force eTap AXS 1x12\n&quot; &quot;\n3.599,00 €\n&quot;
+## 9        9 gravel/backroad &quot;\nBACKROAD AXS Mullet Build\n&quot;    &quot;\n3.799,00 €\n&quot;</code></pre>
 <p>When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You’ll learn that all of these things and more can be customized in each R code block.</p>
 </div>
 

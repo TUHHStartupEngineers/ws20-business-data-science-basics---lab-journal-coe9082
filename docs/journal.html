@@ -422,30 +422,9 @@ div.tocify {
 </div>
 
 
-<p><strong>IMPORTANT:</strong> You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.</p>
-<p>This is an <code>.Rmd</code> file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header.</p>
-<div id="my-first-post" class="section level1">
-<h1><span class="header-section-number">1</span> My first post</h1>
-<p>Last compiled: 2020-12-03</p>
-<p>Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left.</p>
-<div id="second-level-header" class="section level2">
-<h2><span class="header-section-number">1.1</span> Second level header</h2>
-<p>You can add more headers by adding more hashtags. These won’t be put into the table of contents</p>
-<div id="third-level-header" class="section level3">
-<h3><span class="header-section-number">1.1.1</span> third level header</h3>
-<p>Here’s an even lower level header</p>
-</div>
-</div>
-</div>
-<div id="my-second-post-note-the-order" class="section level1">
-<h1><span class="header-section-number">2</span> My second post (note the order)</h1>
-<p>Last compiled: 2020-12-03</p>
-<p>I’m writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom</p>
-</div>
-<div id="adding-r-stuff" class="section level1">
-<h1><span class="header-section-number">3</span> Adding R stuff</h1>
-<p>So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place.</p>
-<p>So, let’s say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:</p>
+<div id="sales-analysis" class="section level1">
+<h1><span class="header-section-number">1</span> Sales Analysis</h1>
+<p>Last compiled: 2020-12-05</p>
 <pre class="r"><code># Data Science at TUHH ------------------------------------------------------
 
 # Chapter 2 ----
@@ -573,7 +552,13 @@ div.tocify {
     #rotate x-axis labels
     theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="journal_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
-<pre class="r"><code>  # Chapter 3 ----
+</div>
+<div id="api-data-retrieval" class="section level1">
+<h1><span class="header-section-number">2</span> API Data Retrieval</h1>
+<p>Last compiled: 2020-12-05</p>
+<pre class="r"><code># Data Science at TUHH ------------------------------------------------------
+
+# Chapter 3 ----
 
 # 3.1 API data retrieval ----
 
@@ -620,7 +605,14 @@ glimpse(data_list)</code></pre>
 ## $ IsAlias                &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FA...
 ## $ SupplementalAdminAreas &lt;list&gt; [&lt;data.frame[0 x 0]&gt;, &lt;data.frame[0 x 0]&gt;, ...
 ## $ DataSets               &lt;list&gt; [&lt;&quot;AirQualityCurrentConditions&quot;, &quot;AirQualit...</code></pre>
-<pre class="r"><code># 3.2 WEBSCRAPING ----
+</div>
+<div id="web-scraping" class="section level1">
+<h1><span class="header-section-number">3</span> Web Scraping</h1>
+<pre class="r"><code># Data Science at TUHH ------------------------------------------------------
+
+# Chapter 3 ----
+
+# 3.2 WEBSCRAPING ----
 
 # 3.2.0 Load libraries
 
@@ -656,12 +648,10 @@ bike_family_tbl &lt;- html_home %&gt;%
   # Save the family urls
   transmute(family_url = str_glue(&quot;https://www.rosebikes.de{family_class}&quot;))
 
-
 # 3.2.2 COLLECT Gravel Categories 
 
 # Read in the HTML for the entire Gravel family webpage
 html_family         &lt;- read_html(bike_family_tbl$family_url[3])
-
 
 bike_category_tbl &lt;- html_family %&gt;%
   
@@ -677,13 +667,12 @@ bike_category_tbl &lt;- html_family %&gt;%
   # Save the Categories urls
   transmute(position, category_url = str_glue(&quot;https://www.rosebikes.de{subdirectory}&quot;))
 
-
 # 3.2.3 COLLECT Gravel/Backroad Bike Models 
 
 # Read in the HTML for the entire Gravel/Backroad category webpage
 html_models         &lt;- read_html(bike_category_tbl$category_url[2])
 
-bike_model_tbl &lt;- html_models %&gt;%
+bike_model_1_tbl &lt;- html_models %&gt;%
   
   #Get the nodes for bike models
   html_nodes(css = &quot;.catalog-category-model__title&quot;) %&gt;%
@@ -696,7 +685,7 @@ bike_model_tbl &lt;- html_models %&gt;%
 
 
 #Read models prices
-model_price_tbl &lt;- html_models %&gt;%
+model_price_1_tbl &lt;- html_models %&gt;%
   
   #Get the nodes for bike models prices
   html_nodes(css = &quot;.catalog-category-model__price-current-value&quot;) %&gt;%
@@ -708,28 +697,106 @@ model_price_tbl &lt;- html_models %&gt;%
   enframe(name = &quot;position&quot;, value = &quot;price&quot;)
 
 #Joining category, model and price
-bike_model_tbl &lt;- left_join(bike_model_tbl, model_price_tbl, by = c(&quot;position&quot;)) %&gt;%
+bike_model_1_tbl &lt;- left_join(bike_model_1_tbl, model_price_1_tbl, by = c(&quot;position&quot;)) %&gt;%
   tibble(category= bike_category_tbl$category_url[2]) %&gt;% 
   separate(col    = category,
            into   = c(&quot;remove&quot;, &quot;category&quot;),
            sep    = &quot;fahrräder/&quot;) %&gt;% 
   select(position, category, model, price)
 
+# 3.2.4 COLLECT Gravel/Backroad al Bike Models 
+
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         &lt;- read_html(bike_category_tbl$category_url[1])
+
+bike_model_2_tbl &lt;- html_models %&gt;%
+  
+  #Get the nodes for bike models
+  html_nodes(css = &quot;.catalog-category-model__title&quot;) %&gt;%
+  
+  #...and extract the text
+  html_text()%&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;model&quot;)
+
+#Read models prices
+model_price_2_tbl &lt;- html_models %&gt;%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = &quot;.catalog-category-model__price-current-value&quot;) %&gt;%
+  
+  #...and extract the text
+  html_text()%&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;price&quot;)
+
+#Joining category, model and price
+bike_model_2_tbl &lt;- left_join(bike_model_2_tbl, model_price_2_tbl, by = c(&quot;position&quot;)) %&gt;%
+  tibble(category= bike_category_tbl$category_url[1]) %&gt;% 
+  separate(col    = category,
+           into   = c(&quot;remove&quot;, &quot;category&quot;),
+           sep    = &quot;fahrräder/&quot;) %&gt;% 
+  select(position, category, model, price)
+
+# 3.2.5 COLLECT Gravel/Backroad limited Bike Models 
+
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         &lt;- read_html(bike_category_tbl$category_url[3])
+
+bike_model_3_tbl &lt;- html_models %&gt;%
+  
+  #Get the nodes for bike models
+  html_nodes(css = &quot;.catalog-category-model__title&quot;) %&gt;%
+  
+  #...and extract the text
+  html_text()%&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;model&quot;)
+
+
+#Read models prices
+model_price_3_tbl &lt;- html_models %&gt;%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = &quot;.catalog-category-model__price-current-value&quot;) %&gt;%
+  
+  #...and extract the text
+  html_text()%&gt;%
+  
+  # Convert vector to tibble
+  enframe(name = &quot;position&quot;, value = &quot;price&quot;)
+
+#Joining category, model and price
+bike_model_3_tbl &lt;- left_join(bike_model_3_tbl, model_price_3_tbl, by = c(&quot;position&quot;)) %&gt;%
+  tibble(category= bike_category_tbl$category_url[3]) %&gt;% 
+  separate(col    = category,
+           into   = c(&quot;remove&quot;, &quot;category&quot;),
+           sep    = &quot;fahrräder/&quot;) %&gt;% 
+  select(position, category, model, price)
+
+#Bind 3 categories tables
+bike_model_tbl &lt;- bike_model_3_tbl %&gt;%
+  rbind(bike_model_2_tbl) %&gt;%
+  rbind(bike_model_1_tbl)
+
 #Print first 10 rows
-bike_model_tbl</code></pre>
-<pre><code>## # A tibble: 9 x 4
-##   position category        model                              price           
-##      &lt;int&gt; &lt;chr&gt;           &lt;chr&gt;                              &lt;chr&gt;           
-## 1        1 gravel/backroad &quot;\nBACKROAD GRX RX600 1x11\n&quot;      &quot;\n2.599,00 €\n&quot;
-## 2        2 gravel/backroad &quot;\nBACKROAD GRX RX600\n&quot;           &quot;\n2.699,00 €\n&quot;
-## 3        3 gravel/backroad &quot;\nBACKROAD GRX RX810 1x11\n&quot;      &quot;\n2.899,00 €\n&quot;
-## 4        4 gravel/backroad &quot;\nBACKROAD GRX RX810\n&quot;           &quot;\n2.999,00 €\n&quot;
-## 5        5 gravel/backroad &quot;\nBACKROAD Force 1x11\n&quot;          &quot;\n2.999,00 €\n&quot;
-## 6        6 gravel/backroad &quot;\nBACKROAD GRX RX810 Di2 1x11\n&quot;  &quot;\n3.499,00 €\n&quot;
-## 7        7 gravel/backroad &quot;\nBACKROAD GRX RX810 Di2\n&quot;       &quot;\n3.599,00 €\n&quot;
-## 8        8 gravel/backroad &quot;\nBACKROAD Force eTap AXS 1x12\n&quot; &quot;\n3.599,00 €\n&quot;
-## 9        9 gravel/backroad &quot;\nBACKROAD AXS Mullet Build\n&quot;    &quot;\n3.799,00 €\n&quot;</code></pre>
-<p>When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You’ll learn that all of these things and more can be customized in each R code block.</p>
+bike_model_tbl %&gt;% head(n = 10)</code></pre>
+<pre><code>## # A tibble: 10 x 4
+##    position category             model                             price        
+##       &lt;int&gt; &lt;chr&gt;                &lt;chr&gt;                             &lt;chr&gt;        
+##  1        1 gravel/backroad-lim~ &quot;\nBACKROAD GRX RX810 Di2 1x11 L~ &quot;\n4.599,00 ~
+##  2        2 gravel/backroad-lim~ &quot;\nBACKROAD Force eTap AXS 1x12 ~ &quot;\n4.699,00 ~
+##  3        1 gravel/backroad-al   &quot;\nBACKROAD AL GRX RX400\n&quot;       &quot;\n1.549,00 ~
+##  4        2 gravel/backroad-al   &quot;\nBACKROAD AL Apex 1x11\n&quot;       &quot;\n1.599,00 ~
+##  5        3 gravel/backroad-al   &quot;\nBACKROAD AL GRX RX600 1x11\n&quot;  &quot;\n1.799,00 ~
+##  6        4 gravel/backroad-al   &quot;\nBACKROAD AL GRX RX600\n&quot;       &quot;\n1.849,00 ~
+##  7        5 gravel/backroad-al   &quot;\nBACKROAD AL Apex 1x11 MULLET\~ &quot;\n1.899,00 ~
+##  8        6 gravel/backroad-al   &quot;\nBACKROAD AL GRX RX810 1x11\n&quot;  &quot;\n1.999,00 ~
+##  9        7 gravel/backroad-al   &quot;\nBACKROAD AL GRX RX810\n&quot;       &quot;\n2.049,00 ~
+## 10        1 gravel/backroad      &quot;\nBACKROAD GRX RX600 1x11\n&quot;     &quot;\n2.599,00 ~</code></pre>
 </div>
 
 

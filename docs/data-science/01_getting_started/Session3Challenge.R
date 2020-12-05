@@ -93,7 +93,7 @@ bike_category_tbl <- html_family %>%
 # Read in the HTML for the entire Gravel/Backroad category webpage
 html_models         <- read_html(bike_category_tbl$category_url[2])
 
-bike_model_tbl <- html_models %>%
+bike_model_1_tbl <- html_models %>%
   
   #Get the nodes for bike models
   html_nodes(css = ".catalog-category-model__title") %>%
@@ -106,7 +106,7 @@ bike_model_tbl <- html_models %>%
 
 
 #Read models prices
-model_price_tbl <- html_models %>%
+model_price_1_tbl <- html_models %>%
   
   #Get the nodes for bike models prices
   html_nodes(css = ".catalog-category-model__price-current-value") %>%
@@ -118,12 +118,100 @@ model_price_tbl <- html_models %>%
   enframe(name = "position", value = "price")
 
 #Joining category, model and price
-bike_model_tbl <- left_join(bike_model_tbl, model_price_tbl, by = c("position")) %>%
+bike_model_1_tbl <- left_join(bike_model_1_tbl, model_price_1_tbl, by = c("position")) %>%
   tibble(category= bike_category_tbl$category_url[2]) %>% 
   separate(col    = category,
            into   = c("remove", "category"),
            sep    = "fahrräder/") %>% 
   select(position, category, model, price)
 
+
+
+
+
+
+# 3.2.4 COLLECT Gravel/Backroad al Bike Models 
+
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         <- read_html(bike_category_tbl$category_url[1])
+
+bike_model_2_tbl <- html_models %>%
+  
+  #Get the nodes for bike models
+  html_nodes(css = ".catalog-category-model__title") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "model")
+
+
+#Read models prices
+model_price_2_tbl <- html_models %>%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = ".catalog-category-model__price-current-value") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "price")
+
+#Joining category, model and price
+bike_model_2_tbl <- left_join(bike_model_2_tbl, model_price_2_tbl, by = c("position")) %>%
+  tibble(category= bike_category_tbl$category_url[1]) %>% 
+  separate(col    = category,
+           into   = c("remove", "category"),
+           sep    = "fahrräder/") %>% 
+  select(position, category, model, price)
+
+
+
+# 3.2.5 COLLECT Gravel/Backroad limited Bike Models 
+
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         <- read_html(bike_category_tbl$category_url[3])
+
+bike_model_3_tbl <- html_models %>%
+  
+  #Get the nodes for bike models
+  html_nodes(css = ".catalog-category-model__title") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "model")
+
+
+#Read models prices
+model_price_3_tbl <- html_models %>%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = ".catalog-category-model__price-current-value") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "price")
+
+#Joining category, model and price
+bike_model_3_tbl <- left_join(bike_model_3_tbl, model_price_3_tbl, by = c("position")) %>%
+  tibble(category= bike_category_tbl$category_url[3]) %>% 
+  separate(col    = category,
+           into   = c("remove", "category"),
+           sep    = "fahrräder/") %>% 
+  select(position, category, model, price)
+
+
+
+#Bind 3 categories tables
+bike_model_tbl <- bike_model_3_tbl %>%
+  rbind(bike_model_2_tbl) %>%
+  rbind(bike_model_1_tbl)
+
 #Print first 10 rows
-bike_model_tbl
+bike_model_tbl %>% head(n = 10)

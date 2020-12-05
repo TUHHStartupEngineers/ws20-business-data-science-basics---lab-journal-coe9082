@@ -16,35 +16,9 @@ output:
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 ```
 
-**IMPORTANT:** You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
-
-This is an `.Rmd` file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-# My first post
+# Sales Analysis
 
 Last compiled: `r Sys.Date()`
-
-Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left. 
-
-## Second level header
-
-You can add more headers by adding more hashtags. These won't be put into the table of contents
-
-### third level header
-
-Here's an even lower level header
-
-# My second post (note the order)
-
-Last compiled: `r Sys.Date()`
-
-I'm writing this tutorial going from the top down. And, this is how it will be printed. So, notice the second post is second in the list. If you want your most recent post to be at the top, then make a new post starting at the top. If you want the oldest first, do, then keep adding to the bottom
-
-# Adding R stuff
-
-So far this is just a blog where you can write in plain text and serve your writing to a webpage. One of the main purposes of this lab journal is to record your progress learning R. The reason I am asking you to use this process is because you can both make a website, and a lab journal, and learn R all in R-studio. This makes everything really convenient and in the same place. 
-
-So, let's say you are learning how to make a histogram in R. For example, maybe you want to sample 100 numbers from a normal distribution with mean = 0, and standard deviation = 1, and then you want to plot a histogram. You can do this right here by using an r code block, like this:
 
 ```{r}
 # Data Science at TUHH ------------------------------------------------------
@@ -173,8 +147,16 @@ So, let's say you are learning how to make a histogram in R. For example, maybe 
 
     #rotate x-axis labels
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  
-  # Chapter 3 ----
+```
+
+# API Data Retrieval
+
+Last compiled: `r Sys.Date()`
+
+```{r}
+# Data Science at TUHH ------------------------------------------------------
+
+# Chapter 3 ----
 
 # 3.1 API data retrieval ----
 
@@ -204,6 +186,14 @@ data_list <- raw_data %>%
   fromJSON()
 
 glimpse(data_list)
+```
+
+# Web Scraping
+
+```{r}
+# Data Science at TUHH ------------------------------------------------------
+
+# Chapter 3 ----
 
 # 3.2 WEBSCRAPING ----
 
@@ -241,12 +231,10 @@ bike_family_tbl <- html_home %>%
   # Save the family urls
   transmute(family_url = str_glue("https://www.rosebikes.de{family_class}"))
 
-
 # 3.2.2 COLLECT Gravel Categories 
 
 # Read in the HTML for the entire Gravel family webpage
 html_family         <- read_html(bike_family_tbl$family_url[3])
-
 
 bike_category_tbl <- html_family %>%
   
@@ -262,13 +250,12 @@ bike_category_tbl <- html_family %>%
   # Save the Categories urls
   transmute(position, category_url = str_glue("https://www.rosebikes.de{subdirectory}"))
 
-
 # 3.2.3 COLLECT Gravel/Backroad Bike Models 
 
 # Read in the HTML for the entire Gravel/Backroad category webpage
 html_models         <- read_html(bike_category_tbl$category_url[2])
 
-bike_model_tbl <- html_models %>%
+bike_model_1_tbl <- html_models %>%
   
   #Get the nodes for bike models
   html_nodes(css = ".catalog-category-model__title") %>%
@@ -281,7 +268,7 @@ bike_model_tbl <- html_models %>%
 
 
 #Read models prices
-model_price_tbl <- html_models %>%
+model_price_1_tbl <- html_models %>%
   
   #Get the nodes for bike models prices
   html_nodes(css = ".catalog-category-model__price-current-value") %>%
@@ -293,15 +280,91 @@ model_price_tbl <- html_models %>%
   enframe(name = "position", value = "price")
 
 #Joining category, model and price
-bike_model_tbl <- left_join(bike_model_tbl, model_price_tbl, by = c("position")) %>%
+bike_model_1_tbl <- left_join(bike_model_1_tbl, model_price_1_tbl, by = c("position")) %>%
   tibble(category= bike_category_tbl$category_url[2]) %>% 
   separate(col    = category,
            into   = c("remove", "category"),
            sep    = "fahrräder/") %>% 
   select(position, category, model, price)
 
-#Print first 10 rows
-bike_model_tbl
-```
+# 3.2.4 COLLECT Gravel/Backroad al Bike Models 
 
-When you knit this R Markdown document, you will see that the histogram is printed to the page, along with the R code. This document can be set up to hide the R code in the webpage, just delete the comment (hashtag) from the cold folding option in the yaml header up top. For purposes of letting yourself see the code, and me see the code, best to keep it the way that it is. You'll learn that all of these things and more can be customized in each R code block.
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         <- read_html(bike_category_tbl$category_url[1])
+
+bike_model_2_tbl <- html_models %>%
+  
+  #Get the nodes for bike models
+  html_nodes(css = ".catalog-category-model__title") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "model")
+
+#Read models prices
+model_price_2_tbl <- html_models %>%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = ".catalog-category-model__price-current-value") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "price")
+
+#Joining category, model and price
+bike_model_2_tbl <- left_join(bike_model_2_tbl, model_price_2_tbl, by = c("position")) %>%
+  tibble(category= bike_category_tbl$category_url[1]) %>% 
+  separate(col    = category,
+           into   = c("remove", "category"),
+           sep    = "fahrräder/") %>% 
+  select(position, category, model, price)
+
+# 3.2.5 COLLECT Gravel/Backroad limited Bike Models 
+
+# Read in the HTML for the entire Gravel/Backroad category webpage
+html_models         <- read_html(bike_category_tbl$category_url[3])
+
+bike_model_3_tbl <- html_models %>%
+  
+  #Get the nodes for bike models
+  html_nodes(css = ".catalog-category-model__title") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "model")
+
+
+#Read models prices
+model_price_3_tbl <- html_models %>%
+  
+  #Get the nodes for bike models prices
+  html_nodes(css = ".catalog-category-model__price-current-value") %>%
+  
+  #...and extract the text
+  html_text()%>%
+  
+  # Convert vector to tibble
+  enframe(name = "position", value = "price")
+
+#Joining category, model and price
+bike_model_3_tbl <- left_join(bike_model_3_tbl, model_price_3_tbl, by = c("position")) %>%
+  tibble(category= bike_category_tbl$category_url[3]) %>% 
+  separate(col    = category,
+           into   = c("remove", "category"),
+           sep    = "fahrräder/") %>% 
+  select(position, category, model, price)
+
+#Bind 3 categories tables
+bike_model_tbl <- bike_model_3_tbl %>%
+  rbind(bike_model_2_tbl) %>%
+  rbind(bike_model_1_tbl)
+
+#Print first 10 rows
+bike_model_tbl %>% head(n = 10)
+```

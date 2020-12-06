@@ -1002,10 +1002,104 @@ main_class_top5</code></pre>
 <div id="visualization-ch.1-plot" class="section level1">
 <h1><span class="header-section-number">7</span> Visualization Ch.1 Plot</h1>
 <p>Last compiled: 2020-12-06</p>
+<pre class="r"><code># Data Science at TUHH ------------------------------------------------------
+
+# Chapter 5 ----
+
+# Load libraries ----
+library(tidyverse)
+library(lubridate)
+library(maps)
+
+# DATA IMPORT ----
+
+col_types_covid &lt;- list(
+  dateRep = col_date(&quot;%d/%m/%Y&quot;),
+  day = col_double(),
+  month = col_double(),
+  year = col_double(),
+  cases = col_double(),
+  deaths = col_double(),
+  countriesAndTerritories = col_character(),
+  geoId = col_character(),
+  countryterritoryCode = col_character(),
+  popData2019 = col_double(),
+  continentExp = col_character(),
+  `Cumulative_number_for_14_days_of_COVID-19_cases_per_100000` = col_double()
+)
+
+covid_data_tbl &lt;- read_csv(&quot;https://opendata.ecdc.europa.eu/covid19/casedistribution/csv&quot;, col_types = col_types_covid)
+
+# Ch.1 Plot ----
+
+plot_1_tbl &lt;- covid_data_tbl %&gt;% select(dateRep,countriesAndTerritories,cases) %&gt;% arrange(dateRep) %&gt;%
+              group_by(dateRep) %&gt;% summarise(Total_cases = sum(cases))%&gt;%
+ arrange(dateRep)
+
+cumsum &lt;- plot_1_tbl %&gt;% mutate(cumsum = cumsum(Total_cases))
+
+cumsum %&gt;%
+  
+  ggplot(aes(dateRep, cumsum)) +
+  
+  theme_light() +
+  theme(
+    
+    title = element_text(face = &quot;bold&quot;, color = &quot;#08306B&quot;)
+  ) +
+  scale_x_date(limits = as.Date(c(&quot;2019-12-31&quot;,&quot;2020-12-06&quot;))) +
+  ggtitle(&quot;limits = as.Date(c(\&quot;2019-12-31\&quot;,\&quot;2020-12-06\&quot;))&quot;)+
+  
+  scale_y_continuous(labels = scales::scientific_format(scale = 1e-6, 
+                                                        preix = &quot;*&quot;,
+                                                        suffix = &quot;&quot;)) +
+  
+  labs(
+    title = &quot;Covid-19 Cases&quot;,
+    subtitle = &quot;Number of cases trending up&quot;,
+    caption = &quot;&quot;,
+    x = &quot;Date&quot;,
+    y = &quot;Cases&quot;,
+    color = &quot;cumsum&quot; # Legend text
+  )+
+  
+  geom_line(size = 0.8, linetype = 1 , color = &quot;blue&quot;)</code></pre>
+<p><img src="journal_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
 <div id="visualization-ch.2-plot" class="section level1">
 <h1><span class="header-section-number">8</span> Visualization Ch.2 Plot</h1>
 <p>Last compiled: 2020-12-06</p>
+<pre class="r"><code># Ch.2 Plot ----
+
+world_map &lt;- map_data(&quot;world&quot;)
+
+
+mor_rate_by_country &lt;- covid_data_tbl %&gt;% group_by(countriesAndTerritories)%&gt;% summarise(Mor_rate = sum(deaths)/sum(popData2019))
+
+
+mor_rate_by_country &lt;- mor_rate_by_country %&gt;% mutate(across(countriesAndTerritories, str_replace_all, &quot;_&quot;, &quot; &quot;)) %&gt;%
+  mutate(countriesAndTerritories = case_when(
+    
+    countriesAndTerritories == &quot;United Kingdom&quot; ~ &quot;UK&quot;,
+    countriesAndTerritories == &quot;United States of America&quot; ~ &quot;USA&quot;,
+    countriesAndTerritories == &quot;Czechia&quot; ~ &quot;Czech Republic&quot;,
+    TRUE ~ countriesAndTerritories
+    
+  ))
+test &lt;- world_map %&gt;% left_join(mor_rate_by_country, by = c(&quot;region&quot; = &quot;countriesAndTerritories&quot;))
+
+test &lt;- test %&gt;% mutate(More_rate_factored = Mor_rate*10000000000)
+test &lt;- test %&gt;% filter(Mor_rate &gt; 0) 
+ggplot(test, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill=More_rate_factored), colour = &quot;white&quot;) +
+  expand_limits(x = test$long, y = test$lat)+
+  scale_fill_viridis_c(option = &quot;C&quot;)+
+  labs(
+    title = &quot;World Wide Mortality Rate&quot;,
+    subtitle = &quot;&quot;,
+    fill = &quot;Mortality Rate&quot; # Changes the legend name
+  )</code></pre>
+<p><img src="journal_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 </div>
 
 

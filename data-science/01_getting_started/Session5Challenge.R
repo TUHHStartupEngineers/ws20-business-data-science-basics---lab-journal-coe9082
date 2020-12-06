@@ -29,15 +29,14 @@ covid_data_tbl <- read_csv("https://opendata.ecdc.europa.eu/covid19/casedistribu
 # Ch.1 Plot ----
 
 plot_1_tbl <- covid_data_tbl %>% select(dateRep,countriesAndTerritories,cases) %>% arrange(dateRep) %>%
-              
+              group_by(dateRep) %>% summarise(Total_cases = sum(cases))%>%
+ arrange(dateRep)
 
-Total_casses <- covid_data_dated_tbl %>% group_by(date,country)%>% summarise(Total = sum(cases))
-Total_casses <- Total_casses %>% arrange(!desc(date))
-cumsum <- Total_casses %>% mutate(cumsum = cumsum(Total))
+cumsum <- plot_1_tbl %>% mutate(cumsum = cumsum(Total_cases))
 
 cumsum %>%
   
-  ggplot(aes(date, cumsum)) +
+  ggplot(aes(dateRep, cumsum)) +
   
   theme_light() +
   theme(
@@ -67,7 +66,7 @@ cumsum %>%
 world_map <- map_data("world")
 
 
-mor_rate_by_country <- covid_data_dated_tbl %>% group_by(countriesAndTerritories)%>% summarise(Mor_rate = sum(deaths)/sum(popData2019))
+mor_rate_by_country <- covid_data_tbl %>% group_by(countriesAndTerritories)%>% summarise(Mor_rate = sum(deaths)/sum(popData2019))
 
 
 mor_rate_by_country <- mor_rate_by_country %>% mutate(across(countriesAndTerritories, str_replace_all, "_", " ")) %>%

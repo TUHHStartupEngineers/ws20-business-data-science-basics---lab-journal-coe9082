@@ -211,7 +211,9 @@ bike_model_3_tbl <- left_join(bike_model_3_tbl, model_price_3_tbl, by = c("posit
 #Bind 3 categories tables
 bike_model_tbl <- bike_model_3_tbl %>%
   rbind(bike_model_2_tbl) %>%
-  rbind(bike_model_1_tbl)
+  rbind(bike_model_1_tbl) %>%
+  mutate(price =  price %>% str_remove_all("\n")) %>%
+  mutate(model =  model %>% str_remove_all("\n"))
 
 #Print first 10 rows
 bike_model_tbl %>% head(n = 10)
